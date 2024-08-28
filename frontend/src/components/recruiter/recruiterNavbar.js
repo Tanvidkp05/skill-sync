@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 
 const RecruiterNavbar = () => {
   return (
@@ -8,8 +9,15 @@ const RecruiterNavbar = () => {
           {/* Replace with your logo */}
         </div>
         <ul className="flex space-x-5 justify-center">
-        <li className="flex items-center justify-center">View Applications</li>
-          <li className="flex items-center justify-center">Profile</li>
+          <li className="flex items-center justify-center hover:bg-gray-100 px-2">
+            <NavLink to="/" className="text-gray-700 hover:text-blue-500 transition-colors duration-200" >Home</NavLink>
+          </li>
+          <li className="flex items-center justify-center hover:bg-gray-100 px-2">
+            <NavLink to="/view-applications" className="text-gray-700 hover:text-blue-500 transition-colors duration-200">View Applications</NavLink>
+          </li>
+          <li className="flex items-center justify-center hover:bg-gray-100 px-2">
+            <NavLink to="/recruiter-profile" className="text-gray-700 hover:text-blue-500 transition-colors duration-200">Profile</NavLink>
+          </li>
         </ul>
       </div>
       <div className="flex space-x-4">

@@ -1,12 +1,19 @@
-import React from 'react'
-import Recuiter from './components/recruiter/recuiter'
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Recruiter from './components/recruiter/recuiter';
+import ViewAppl from './components/recruiter/viewApplications/viewAppl';
+import RecruiterProfile from './components/recruiter/recruiter-profile/recruiterProfile';
 
 const App = () => {
   return (
-    <div className="App">
-      <Recuiter />
-    </div>
-  )
-}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Recruiter />} />
+        <Route path="/view-applications" element={<ViewAppl />} />
+        <Route path='/recruiter-profile' element={<RecruiterProfile />}/>
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;

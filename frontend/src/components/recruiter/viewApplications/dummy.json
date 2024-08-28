@@ -1,0 +1,32 @@
+[
+    {
+        "title": "Software developer",
+        "status": "open",
+        "date": "01-10-24",
+        "applicants": 45
+    },
+    {
+        "title": "UI/UX developer",
+        "status": "open",
+        "date": "01-10-24",
+        "applicants": 25
+    },
+    {
+        "title": "ML engineer",
+        "status": "close",
+        "date": "01-10-24",
+        "applicants": 34
+    },
+    {
+        "title": "ML engineer",
+        "status": "close",
+        "date": "01-10-24",
+        "applicants": 34
+    },
+    {
+        "title": "app developer",
+        "status": "open",
+        "date":"01-10-24",
+        "applicants":25
+    }
+]
