@@ -12,9 +12,9 @@ const ViewAppl = () => {
         {jobData.map((job) => (
           <li
             key={job.title}
-            className="bg-indigo-300 p-4 rounded-3xl shadow-sm border w-3 min-w-full h-44 bg-opacity-80"
+            className="bg-indigo-300 p-4 rounded-3xl shadow-sm border w-3 min-w-full h-52 bg-opacity-80"
           >
-            <div className='flex'>
+            <div className='flex justify-end'>
               <MoreVertIcon className='justify-end'/>
               </div>
             <div className="flex justify-center">
