@@ -10,7 +10,7 @@ const jobPostingSchema = new mongoose.Schema({
     required: true,
   },
   requirements: {
-    type: [String],
+    type: String,
     required: true,
   },
   salary: {
@@ -30,19 +30,8 @@ const jobPostingSchema = new mongoose.Schema({
     enum: ['Open', 'Closed'],
     default: 'Open',
   },
-  recruiterId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Recruiter',
-    required: true,
-  },
-  applications: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Application',
-    },
-  ],
 });
 
-const JobPosting = mongoose.model('JobPosting', jobPostingSchema);
+// const JobPosting = mongoose.model('JobPosting', jobPostingSchema);
 
-module.exports = JobPosting;
+module.exports = jobPostingSchema;
