@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import RecruiterNavbar from './recruiterNavbar';
 import RecentJobApplicationsTable from './recentJobs';
+import JobPostingForm from './JobPostingForm';
 
 const Recruiter = () => {
   const [recentJobApplications, setRecentJobApplications] = useState([]);
+  const [showJobPostingForm, setShowJobPostingForm] = useState(false);
 
   useEffect(() => {
     // Fetch recent job applications from your backend
@@ -29,13 +31,19 @@ const Recruiter = () => {
           Get a quick overview of your recruitment tasks and metrics. Stay organized and efficient in managing job postings, candidates, interviews, and analytics.
         </p>
         <div className="flex justify-center space-x-4">
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full">
+          <button
+            onClick={() => setShowJobPostingForm(true)}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full"
+          >
             Create Job Postings
           </button>
           <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full">
             Search Candidates
           </button>
         </div>
+        {showJobPostingForm && (
+          <JobPostingForm onClose={() => setShowJobPostingForm(false)} />
+        )}
         <RecentJobApplicationsTable recentJobApplications={recentJobApplications} />
       </div>
     </div>
