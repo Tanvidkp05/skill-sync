@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 const JobPostingForm = ({ onClose }) => {
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center'>
+    <div className='fixed inset-0  bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50'>
       <div className='bg-white p-4 rounded-lg shadow-lg w-full max-w-sm'>
         <div className='flex justify-between items-center mb-2'>
           <h1 className='text-lg font-semibold'>POST JOB</h1>

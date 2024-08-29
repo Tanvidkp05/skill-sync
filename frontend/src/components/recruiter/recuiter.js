@@ -36,13 +36,13 @@ const Recruiter = () => {
           <button
             onClick={() => {
               setShowJobPostingForm(true);
-              setShowSearchbar(false); // Ensure searchbar is hidden when job posting form is open
+             
             }}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full"
           >
             Create Job Postings
           </button>
-          <button
+          <button 
             onClick={() => {
               setShowSearchbar(true);
               setShowJobPostingForm(false); // Ensure job posting form is hidden when searchbar is open
