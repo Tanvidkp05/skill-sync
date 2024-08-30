@@ -20,8 +20,9 @@ const RecentJobApplicationsTable = () => {
   ];
 
   return (
-    <div className="flex justify-center items-center w-full max-w-screen-lg">
+    <div className="flex justify-center items-center ">
       <div className="w-full max-w-screen-lg overflow-x-auto mt-8">
+      <h1 className="text-4xl font-semibold mb-2 text-center">Recent Job Postings</h1>
         <table className="table-auto">
           <thead>
             <tr>
