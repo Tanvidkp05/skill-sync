@@ -12,7 +12,7 @@ function Searchbar() {
   return (
     <div className='Search'>
       <Container>
-        <h1 className='text-center mt-4'>Candidates</h1>
+        <h1 className='text-center mt-1'>Candidates</h1>
         <Form>
           <InputGroup className='my-3'>
             <Form.Control onChange={(e) => setSearch(e.target.value)} placeholder='Search Candidates ' />

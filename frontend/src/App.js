@@ -8,6 +8,7 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import Landing from './components/authentication/Landing';
 import Login from './components/authentication/Login';
 import Register from './components/authentication/Register';
+import ApplDetails from './components/recruiter/viewApplications/ApplDetails';
 
 const App = () => {
   return (
@@ -21,6 +22,9 @@ const App = () => {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/view-applications" element={<ViewAppl />} />
         <Route path='/recruiter-profile' element={<RecruiterProfile />}/>
+        <Route path="/view-applications/:Jtitle"
+              element={<ApplDetails />}
+                  />
       </Routes>
     </BrowserRouter>
   );
