@@ -5,7 +5,13 @@ const ApplDetails = () => {
   return (
     <div>
         <RecruiterNavbar />
-        ApplDetails</div>
+        <div className='flex flex-col justify-center text-center'>
+        <h1>Details </h1>
+        <br /> <br />
+        <h3>Job title:</h3>
+        <h3>Applicants data: </h3>
+        </div>
+    </div>
   )
 }
 

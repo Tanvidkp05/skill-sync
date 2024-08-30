@@ -22,8 +22,8 @@ const jobPostingSchema = new mongoose.Schema({
     required: true,
   },
   datePosted: {
-    type: Date,
-    default: Date.now,
+    type: String,
+    // default: Date.now,
   },
   status: {
     type: String,

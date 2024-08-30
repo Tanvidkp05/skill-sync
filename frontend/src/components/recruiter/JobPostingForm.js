@@ -1,8 +1,7 @@
-import {React, useState} from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 const JobPostingForm = ({ onClose }) => {
-
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [requirements, setRequirements] = useState('');
@@ -10,8 +9,6 @@ const JobPostingForm = ({ onClose }) => {
   const [location, setLocation] = useState('');
   const [datePosted, setDatePosted] = useState('');
   const [status, setStatus] = useState('Open');
-  // const [recruiterId, setRecruiterId] = useState('');
-  // const [applicationLink, setApplicationLink] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,8 +19,7 @@ const JobPostingForm = ({ onClose }) => {
       case 'description':
         setDescription(value);
         break;
-      case 
- 'requirements':
+      case 'requirements':
         setRequirements(value);
         break;
       case 'salary':
@@ -32,7 +28,7 @@ const JobPostingForm = ({ onClose }) => {
       case 'location':
         setLocation(value);
         break;
-      case 'datePosted':
+      case 'dateposted':
         setDatePosted(value);
         break;
       case 'status':
@@ -46,6 +42,10 @@ const JobPostingForm = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Convert the datePosted to dd-mm-yy format
+    const [year, month, day] = datePosted.split('-');
+    const formattedDate = `${day}-${month}-${year.slice(2)}`; // dd-mm-yy format
+
     try {
       const response = await fetch('http://localhost:5000/api/jobpostings', {
         method: 'POST',
@@ -56,7 +56,7 @@ const JobPostingForm = ({ onClose }) => {
           requirements,
           salary,
           location,
-          datePosted,
+          datePosted: formattedDate,
           status
         }),
       });
@@ -67,15 +67,13 @@ const JobPostingForm = ({ onClose }) => {
         onClose(); // Close the form
       } else {
         const errorData = await response.json();
-        alert('error in postinng job: ' + errorData.message);
+        alert('Error in posting job: ' + errorData.message);
       }
     } catch (error) {
-      console.error('Error:', error.message);   
-
+      console.error('Error:', error.message);   
     }
   };
 
-  
   return (
     <div className='fixed inset-0 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50'>
       <div className='bg-white p-4 rounded-lg shadow-lg w-full max-w-sm'>
@@ -168,8 +166,8 @@ const JobPostingForm = ({ onClose }) => {
               required
               onChange={handleChange}
             >
-              <option value='open'>Open</option>
-              <option value='closed'>Closed</option>
+              <option value='Open'>Open</option>
+              <option value='Closed'>Closed</option>
             </select>
           </div>
 

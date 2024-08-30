@@ -6,8 +6,8 @@ const jobPostingSchema=require('./models/jobPosting');
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
+
 
 const PORT = process.env.PORT || 5000;
 
@@ -17,6 +17,14 @@ mongoose.connect('mongodb://127.0.0.1:27017/auth', {
 })
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.log('MongoDB connection error:', err));
+
+
+    app.use(
+        cors({
+          origin: "http://localhost:3000",
+          credentials: true
+        })
+      );
 
 // Define User Schema
 const userSchema = new mongoose.Schema({
@@ -90,5 +98,15 @@ app.post('/api/jobpostings', async (req, res) => {
     let result= await job.save();
     res.send(result);
 });
+
+app.get('/api/jobpostings', async (req, res) => {
+    try {
+      const jobPostings = await JobPosting.find(); // Find all job postings in the collection
+      res.status(200).json(jobPostings); // Send the fetched data as JSON response
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error fetching job postings' }); // Handle errors
+    }
+  });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
