@@ -30,6 +30,11 @@ const jobPostingSchema = new mongoose.Schema({
     enum: ['Open', 'Closed'],
     default: 'Open',
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  }
 });
 
 // const JobPosting = mongoose.model('JobPosting', jobPostingSchema);

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import {jwtDecode} from 'jwt-decode';
 
 const JobPostingForm = ({ onClose }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [requirements, setRequirements] = useState('');
-  const [salary, setSalary] = useState(''); 
+  const [salary, setSalary] = useState('');
   const [location, setLocation] = useState('');
   const [datePosted, setDatePosted] = useState('');
   const [status, setStatus] = useState('Open');
@@ -47,9 +48,18 @@ const JobPostingForm = ({ onClose }) => {
     const formattedDate = `${day}-${month}-${year.slice(2)}`; // dd-mm-yy format
 
     try {
+      const token = localStorage.getItem('token'); // Retrieve token from localStorage
+      console.log("Retrieved Token:", token); // Check the token here
+      const decodedToken = jwtDecode(token); // You might need to install 'jwt-decode' 
+      console.log('Decoded Token:', decodedToken);
+        const userId = decodedToken.user.id;
+
       const response = await fetch('http://localhost:5000/api/jobpostings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Include token in Authorization header
+        },
         body: JSON.stringify({
           title,
           description,
@@ -57,20 +67,22 @@ const JobPostingForm = ({ onClose }) => {
           salary,
           location,
           datePosted: formattedDate,
-          status
+          status,
+          userId
         }),
       });
 
       if (response.ok) {
         console.log('Job posting created successfully');
-        alert("Job posting created");
+        alert('Job posting created');
         onClose(); // Close the form
       } else {
         const errorData = await response.json();
-        alert('Error in posting job: ' + errorData.message);
+        alert('Error posting job: ' + (errorData.message || 'An error occurred'));
       }
     } catch (error) {
-      console.error('Error:', error.message);   
+      console.error('Error:', error.message);
+      alert('Error posting job: ' + error.message);
     }
   };
 
@@ -93,6 +105,7 @@ const JobPostingForm = ({ onClose }) => {
               name='title'
               className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
               required
+              value={title}
               onChange={handleChange}
             />
           </div>
@@ -105,6 +118,7 @@ const JobPostingForm = ({ onClose }) => {
               className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
               rows='2'
               required
+              value={description}
               onChange={handleChange}
             ></textarea>
           </div>
@@ -117,6 +131,7 @@ const JobPostingForm = ({ onClose }) => {
               className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
               rows='2'
               required
+              value={requirements}
               onChange={handleChange}
             ></textarea>
           </div>
@@ -129,6 +144,7 @@ const JobPostingForm = ({ onClose }) => {
               name='salary'
               className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
               required
+              value={salary}
               onChange={handleChange}
             />
           </div>
@@ -141,6 +157,7 @@ const JobPostingForm = ({ onClose }) => {
               name='location'
               className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
               required
+              value={location}
               onChange={handleChange}
             />
           </div>
@@ -153,6 +170,7 @@ const JobPostingForm = ({ onClose }) => {
               name='dateposted'
               className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
               required
+              value={datePosted}
               onChange={handleChange}
             />
           </div>
@@ -164,6 +182,7 @@ const JobPostingForm = ({ onClose }) => {
               name='status'
               className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
               required
+              value={status}
               onChange={handleChange}
             >
               <option value='Open'>Open</option>

@@ -2,12 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const jobPostingSchema=require('./models/jobPosting');
+const jwt = require('jsonwebtoken');
+const jobPostingSchema = require('./models/jobPosting');
+const authenticateToken = require('./middleware/authMiddleware');
+require('dotenv').config();
+
 
 const app = express();
 
 app.use(express.json());
-
 
 const PORT = process.env.PORT || 5000;
 
@@ -18,13 +21,12 @@ mongoose.connect('mongodb://127.0.0.1:27017/auth', {
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.log('MongoDB connection error:', err));
 
-
-    app.use(
-        cors({
-          origin: "http://localhost:3000",
-          credentials: true
-        })
-      );
+app.use(
+    cors({
+        origin: "http://localhost:3000",
+        credentials: true,
+    })
+);
 
 // Define User Schema
 const userSchema = new mongoose.Schema({
@@ -41,7 +43,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// job-posting schema
+// Job Posting schema
 const JobPosting = mongoose.model('jobpostings', jobPostingSchema);
 
 // Registration Route
@@ -49,8 +51,13 @@ app.post('/api/auth/register', async (req, res) => {
     const { email, password, role, firstName, middleName, lastName, username, dob, mobileNumber } = req.body;
 
     try {
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({
+        user = new User({
             email,
             password: hashedPassword,
             role,
@@ -63,7 +70,25 @@ app.post('/api/auth/register', async (req, res) => {
         });
 
         await user.save();
-        res.status(201).json({ message: 'User registered successfully' });
+
+        // Create JWT payload
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role,
+            },
+        };
+
+        // Sign and return the token
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '5h' },
+            (err, token) => {
+                if (err) throw err;
+                res.status(201).json({ token });
+            }
+        );
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error registering user' });
@@ -77,7 +102,7 @@ app.post('/api/auth/login', async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'User not found' });
+            return res.status(400).json({ message: 'Invalid credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -85,28 +110,73 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        res.status(200).json({ role: user.role });
+        // Create JWT payload
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role,
+            },
+        };
+
+        // Sign and return the token
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '5h' },
+            (err, token) => {
+                if (err) throw err;
+                res.status(200).json({ token });
+            }
+        );
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error logging in' });
     }
 });
 
-// job-posting route
-app.post('/api/jobpostings', async (req, res) => {
-    let job=new JobPosting(req.body);
-    let result= await job.save();
-    res.send(result);
+app.use('/api/jobpostings', authenticateToken);
+
+
+// Job-posting route
+app.post('/api/jobpostings', authenticateToken, async (req, res) => {
+    const { title, description, requirements, salary, location, datePosted, status } = req.body;
+    const userId = req.user.id; // Get userId from the JWT payload
+    console.log(userId);
+    
+
+    if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });}
+
+    try {
+        const job = new JobPosting({
+            title,
+            description,
+            requirements,
+            salary,
+            location,
+            datePosted,
+            status,
+            userId
+        });
+
+        const result = await job.save();
+        res.status(201).json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error creating job posting' });
+    }
 });
 
-app.get('/api/jobpostings', async (req, res) => {
+app.get('/api/jobpostings', authenticateToken, async (req, res) => {
+    const userId = req.user.id; // Get userId from the JWT payload
+
     try {
-      const jobPostings = await JobPosting.find(); // Find all job postings in the collection
-      res.status(200).json(jobPostings); // Send the fetched data as JSON response
+        const jobPostings = await JobPosting.find({ userId }); // Find job postings for the logged-in user
+        res.status(200).json(jobPostings);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error fetching job postings' }); // Handle errors
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching job postings' });
     }
-  });
+});
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

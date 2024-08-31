@@ -14,14 +14,24 @@ function Login() {
                 },
                 body: JSON.stringify({ email, password }),
             });
-
+    
             if (response.ok) {
                 const data = await response.json();
-                if (data.role === 'user') {
+                const token = data.token;
+    
+                // Store the token in localStorage or sessionStorage
+                localStorage.setItem('token', token);
+    
+                // Decode the token to get the role
+                const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decode the payload
+                const role = decodedToken.user.role;
+    
+                // Redirect based on the role
+                if (role === 'user') {
                     window.location.href = '/user-dashboard';
-                } else if (data.role === 'admin') {
+                } else if (role === 'admin') {
                     window.location.href = '/admin-dashboard';
-                } else if (data.role === 'company') {
+                } else if (role === 'company') {
                     window.location.href = '/company-panel';
                 }
             } else {
@@ -32,6 +42,7 @@ function Login() {
             console.error('Error:', error.message);
         }
     };
+    
 
     const bgZinc100 = 'bg-zinc-100';
     const bgWhiteOpacity90 = 'bg-white bg-opacity-90';

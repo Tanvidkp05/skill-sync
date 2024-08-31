@@ -31,17 +31,23 @@ const ViewAppl = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          'http://localhost:5000/api/jobpostings',
-          { withCredentials: true } // Adjust based on authentication needs
-        );
-        console.log(response.data);
-        setApplicationDetails(response.data.data || response.data);
-        setIsLoading(false); // Set loading state to false after data is fetched
+          const token = localStorage.getItem('token'); // Retrieve token from localStorage
+          console.log(token); // Should print the token
+
+          const response = await axios.get('http://localhost:5000/api/jobpostings', {
+              headers: {
+                  'Authorization': `Bearer ${token}`, // Include token in Authorization header
+              },
+          });
+  
+          // Process the response
+          console.log(response.data);
+          setApplicationDetails(response.data);
+          setIsLoading(false);
       } catch (error) {
-        console.error(error);
+          console.error('Error fetching job postings:', error.response ? error.response.data : error.message);
       }
-    };
+  };
     fetchData();
   }, []);
 
