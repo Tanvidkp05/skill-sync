@@ -6,12 +6,12 @@ const DropdownJob = () => {
       <ul className="p-0">
         <li className='p-2 hover:bg-gray-200'>
           <button className="workspace-bt">
-            Edit Workspace
+            Edit Post
           </button>
         </li>
         <li className='p-2 hover:bg-gray-200'>
           <button className="workspace-btn">
-            Delete Workspace
+            Delete Post
           </button>
         </li>
       </ul>

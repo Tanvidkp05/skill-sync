@@ -9,10 +9,12 @@ import Landing from './components/authentication/Landing';
 import Login from './components/authentication/Login';
 import Register from './components/authentication/Register';
 import ApplDetails from './components/recruiter/viewApplications/ApplDetails';
+import { UserProvider } from './context/UserContext';
 
 const App = () => {
   return (
     <BrowserRouter>
+    <UserProvider>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -26,6 +28,7 @@ const App = () => {
               element={<ApplDetails />}
                   />
       </Routes>
+      </UserProvider>
     </BrowserRouter>
   );
 };

@@ -134,6 +134,23 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// User GET Route to retrieve user data
+app.get('/api/auth/user', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id; // Get userId from the JWT payload
+        const user = await User.findById(userId).select('-password'); // Exclude the password from the response
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching user data' });
+    }
+});
+
 app.use('/api/jobpostings', authenticateToken);
 
 

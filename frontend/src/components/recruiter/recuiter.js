@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { UserContext } from '../../context/UserContext';
 import RecruiterNavbar from './recruiterNavbar';
 import RecentJobApplicationsTable from './recentJobs';
 import JobPostingForm from './JobPostingForm';
 import Searchbar from './searchbar/Searchbar';
 
 const Recruiter = () => {
+  const { user } = useContext(UserContext);  // Access the user data from UserContext
   const [recentJobApplications, setRecentJobApplications] = useState([]);
   const [showJobPostingForm, setShowJobPostingForm] = useState(false);
   const [showSearchbar, setShowSearchbar] = useState(false);
@@ -20,7 +22,7 @@ const Recruiter = () => {
       const data = await response.json();
       setRecentJobApplications(data);
     } catch (error) {
-      console.error('Error fetching recent job applications:', error);
+      // console.error('Error fetching recent job applications:', error);
     }
   };
 
@@ -33,7 +35,9 @@ const Recruiter = () => {
       <div className="mt-3 flex">
       <div className="w-1/2 pr-4">
       <div className='flex justify-center text-center flex-col'>
-      <h1 className="text-4xl font-semibold mb-2">Welcome to the Recruiter Module Dashboard</h1>
+      <h1 className="text-4xl font-semibold mb-2">
+                Welcome <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-blue-900 bg-clip-text text-transparent">{user.username}</span> to the Recruiter Module Dashboard 
+        </h1>
       <p className="text-muted-foreground mb-4 mt-4">Get a quick overview of your recruitment tasks and metrics. Stay organized and efficient in managing job postings, candidates, interviews, and analytics.</p>
       </div>
       <div className="flex justify-center space-x-4">
@@ -61,7 +65,7 @@ const Recruiter = () => {
         )}
 
           </div>
-          <div class="w-2/3 h-1/2">
+          <div className="w-2/3 h-1/2">
           <img src="https://www.hiresuccess.com/assets/pages/home/hire-success-c63b5a1698a943f27af88e76d837e16bae737605be93c747577099f2e76e5799cb6181f8e8cf5ff1d4e7e5fd072710760a7ff6d8de3b884cf73c001e92bdf1ca.png"alt=' ' width={400} height={300}
            style={{
             float: '',

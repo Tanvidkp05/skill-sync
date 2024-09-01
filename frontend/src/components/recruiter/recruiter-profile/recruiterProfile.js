@@ -1,18 +1,9 @@
-import React from 'react';
+import React,{useContext} from 'react';
+import { UserContext } from '../../../context/UserContext';
 import RecruiterNavbar from '../recruiterNavbar';
 
 const RecruiterProfile = () => {
-  const recruiterData = {
-    firstName: 'ishani',
-    middleName: 'hiteshkumar',
-    lastName: 'patel',
-    email: 'ishani@example.com',
-    mobileNumber: '1234567890',
-    dateOfBirth: '2005-14-02',
-    username: 'ishanipatel',
-    designation: 'Recruiter',
-    companyName: 'charusat',
-  };
+  const { user } = useContext(UserContext);
 
   return (
     <div>
@@ -25,39 +16,39 @@ const RecruiterProfile = () => {
         <div className="space-y-4">
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">First Name: </span>
-            <span className="text-gray-700">{recruiterData.firstName}</span>
+            <span className="text-gray-700">{user.firstName}</span>
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Middle Name: </span>
-            <span className="text-gray-700">{recruiterData.middleName}</span>
+            <span className="text-gray-700">{user.middleName}</span>
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Last Name: </span>
-            <span className="text-gray-700">{recruiterData.lastName}</span>
+            <span className="text-gray-700">{user.lastName}</span>
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Email: </span>
-            <span className="text-gray-700">{recruiterData.email}</span>
+            <span className="text-gray-700">{user.email}</span>
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Mobile Number: </span>
-            <span className="text-gray-700">{recruiterData.mobileNumber}</span>
+            <span className="text-gray-700">{user.mobileNumber}</span>
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Date of Birth: </span>
-            <span className="text-gray-700">{recruiterData.dateOfBirth}</span>
+            <span className="text-gray-700">{user.dob}</span>
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Username: </span>
-            <span className="text-gray-700">{recruiterData.username}</span>
+            <span className="text-gray-700">{user.username}</span>
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Designation: </span>
-            <span className="text-gray-700">{recruiterData.designation}</span>
+            {/* <span className="text-gray-700">{recruiterData.designation}</span> */}
           </p>
           <p className="text-lg font-semibold">
             <span className="text-indigo-500">Company Name: </span>
-            <span className="text-gray-700">{recruiterData.companyName}</span>
+            {/* <span className="text-gray-700">{recruiterData.companyName}</span> */}
           </p>
         </div>
       </div>
