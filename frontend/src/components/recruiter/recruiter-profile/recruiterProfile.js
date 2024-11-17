@@ -11,7 +11,7 @@ const RecruiterProfile = () => {
     <div className="h-screen bg-gradient-to-r from-indigo-500 via-indigo-400 to-gray-300 flex flex-col items-center py-10">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-3xl mt-8">
         <h2 className="text-4xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-teal-500 mb-8">
-          Recruiter Profile
+          Profile
         </h2>
         <div className="space-y-4">
           <p className="text-lg font-semibold">

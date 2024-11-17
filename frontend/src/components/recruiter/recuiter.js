@@ -36,9 +36,9 @@ const Recruiter = () => {
       <div className="w-1/2 pr-4">
       <div className='flex justify-center text-center flex-col'>
       <h1 className="text-4xl font-semibold mb-2">
-                Welcome <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-blue-900 bg-clip-text text-transparent">{user.username}</span> to the Recruiter Module Dashboard 
+                Welcome <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-blue-900 bg-clip-text text-transparent">{user.username}</span> to Skill-Sync
         </h1>
-      <p className="text-muted-foreground mb-4 mt-4">Get a quick overview of your recruitment tasks and metrics. Stay organized and efficient in managing job postings, candidates, interviews, and analytics.</p>
+      <p className="text-muted-foreground mb-4 mt-4">"Get a quick overview of your resume and profession, empowering you to assess your qualifications and understand your likelihood of landing your next job with confidence."</p>
       </div>
       <div className="flex justify-center space-x-4">
           <button
@@ -48,7 +48,7 @@ const Recruiter = () => {
             }}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full"
           >
-            Create Job Postings
+            Upload Resume
           </button>
           <button 
             onClick={() => {
@@ -57,7 +57,7 @@ const Recruiter = () => {
             }}
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full"
           >
-            Search Candidates
+            Search for Jobs 
           </button>
           </div>
         {showJobPostingForm && (

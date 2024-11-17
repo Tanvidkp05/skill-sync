@@ -1,203 +1,152 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { GlobalWorkerOptions } from 'pdfjs-dist';
+import axios from 'axios';
 import { X } from 'lucide-react';
-import {jwtDecode} from 'jwt-decode';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'; // Ensure you have pdfjs-dist installed
+
+const cleanResume = (txt) => {
+  let cleanText = txt.replace(/http\S+\s/g, ' ');
+  cleanText = cleanText.replace(/RT|cc/g, ' ');
+  cleanText = cleanText.replace(/#\S+\s/g, ' ');
+  cleanText = cleanText.replace(/@\S+/g, '  ');
+  cleanText = cleanText.replace(/[%s]/g, ' ', '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~');
+  cleanText = cleanText.replace(/[^\x00-\x7f]/g, ' ');
+  cleanText = cleanText.replace(/\s+/g, ' ').trim();
+  return cleanText;
+};
+
+// pdfjsLib.GlobalWorkerOptions.workerSrc =
+//   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js'; 
 
 const JobPostingForm = ({ onClose }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [requirements, setRequirements] = useState('');
-  const [salary, setSalary] = useState('');
-  const [location, setLocation] = useState('');
-  const [datePosted, setDatePosted] = useState('');
-  const [status, setStatus] = useState('Open');
+  const [pdfFile, setPdfFile] = useState(null);
+  const [predictions, setPredictions] = useState([]);
+
+  useEffect(() => {
+    // Ensure workerSrc is set correctly for pdfjs-dist
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+          
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    switch (name) {
-      case 'title':
-        setTitle(value);
-        break;
-      case 'description':
-        setDescription(value);
-        break;
-      case 'requirements':
-        setRequirements(value);
-        break;
-      case 'salary':
-        setSalary(value);
-        break;
-      case 'location':
-        setLocation(value);
-        break;
-      case 'dateposted':
-        setDatePosted(value);
-        break;
-      case 'status':
-        setStatus(value);
-        break;
-      default:
-        break;
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      setPdfFile(file);
+    } else {
+      alert('Please upload a valid PDF file.');
+      setPdfFile(null);
     }
+  };
+
+  const extractKeywordsFromResume = async (file) => {
+    const fileReader = new FileReader();
+    return new Promise((resolve, reject) => {
+      fileReader.onload = async (event) => {
+        const typedarray = new Uint8Array(event.target.result);
+        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+        const numPages = pdf.numPages;
+        let textContent = '';
+
+        for (let i = 1; i <= numPages; i++) {
+          const page = await pdf.getPage(i);
+          const text = await page.getTextContent();
+          const textItems = text.items.map(item => item.str);
+          textContent += textItems.join(' ') + ' ';
+        }
+
+        const cleanedText = cleanResume(textContent);
+        const keywords = cleanedText.split(/\s+/).filter(word => word.length > 3);
+        resolve(keywords);
+      };
+
+      fileReader.onerror = (error) => {
+        reject(error);
+      };
+
+      fileReader.readAsArrayBuffer(file);
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Convert the datePosted to dd-mm-yy format
-    const [year, month, day] = datePosted.split('-');
-    const formattedDate = `${day}-${month}-${year.slice(2)}`; // dd-mm-yy format
+    if (!pdfFile) {
+      alert('Please select a PDF file before submitting.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('pdfFile', pdfFile);
 
     try {
-      const token = localStorage.getItem('token'); // Retrieve token from localStorage
-      console.log("Retrieved Token:", token); // Check the token here
-      const decodedToken = jwtDecode(token); // You might need to install 'jwt-decode' 
-      console.log('Decoded Token:', decodedToken);
-        const userId = decodedToken.user.id;
-
-      const response = await fetch('http://localhost:5000/api/jobpostings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Include token in Authorization header
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          requirements,
-          salary,
-          location,
-          datePosted: formattedDate,
-          status,
-          userId
-        }),
-      });
-
-      if (response.ok) {
-        console.log('Job posting created successfully');
-        alert('Job posting created');
-        onClose(); // Close the form
-      } else {
-        const errorData = await response.json();
-        alert('Error posting job: ' + (errorData.message || 'An error occurred'));
+      const token = localStorage.getItem('token');
+      if(!token){
+        console.log("no token found");
       }
+
+      const response = await axios.post('http://localhost:5000/api/jobpostings/upload', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,  // Send the token in the headers
+          'Content-Type': 'multipart/form-data',  // Indicate that you're sending form data
+        },
+      });
+    
+      console.log('Response from upload:', response.data);
+      const result = response.data.result; // Access the 'result' field
+    if (result) {
+      const prediction = result.replace('Prediction: ', '').trim(); // Clean the text
+      setPredictions([prediction]); // Update the state with the cleaned prediction
+    } else {
+      alert('No prediction found in the response.');
+    }
+
     } catch (error) {
       console.error('Error:', error.message);
-      alert('Error posting job: ' + error.message);
+      alert('Error uploading PDF: ' + error.message);
     }
   };
 
   return (
-    <div className='fixed inset-0 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50'>
-      <div className='bg-white p-4 rounded-lg shadow-lg w-full max-w-sm'>
-        <div className='flex justify-between items-center mb-2'>
-          <h1 className='text-lg font-semibold'>POST JOB</h1>
-          <button onClick={onClose} className='text-gray-600 hover:text-gray-900'>
+    <div className="fixed inset-0 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-sm">
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-lg font-semibold">UPLOAD PDF</h1>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
             <X />
           </button>
         </div>
-        <form className='space-y-2' onSubmit={handleSubmit}>
-          {/* Form Fields */}
-          {/* Job Title */}
+        <form className="space-y-2" onSubmit={handleSubmit}>
           <div>
-            <label className='block text-gray-700 text-xs font-medium'>Job Title:</label>
+            <label className="block text-gray-700 text-xs font-medium">Upload PDF:</label>
             <input
-              type='text'
-              name='title'
-              className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
+              type="file"
+              accept="application/pdf"
+              className="w-full mt-1 p-1 border border-gray-300 rounded text-xs"
               required
-              value={title}
               onChange={handleChange}
             />
           </div>
 
-          {/* Job Description */}
-          <div>
-            <label className='block text-gray-700 text-xs font-medium'>Job Description:</label>
-            <textarea
-              name='description'
-              className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
-              rows='2'
-              required
-              value={description}
-              onChange={handleChange}
-            ></textarea>
-          </div>
-
-          {/* Requirements */}
-          <div>
-            <label className='block text-gray-700 text-xs font-medium'>Requirements:</label>
-            <textarea
-              name='requirements'
-              className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
-              rows='2'
-              required
-              value={requirements}
-              onChange={handleChange}
-            ></textarea>
-          </div>
-
-          {/* Salary */}
-          <div>
-            <label className='block text-gray-700 text-xs font-medium'>Salary:</label>
-            <input
-              type='number'
-              name='salary'
-              className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
-              required
-              value={salary}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Location */}
-          <div>
-            <label className='block text-gray-700 text-xs font-medium'>Location:</label>
-            <input
-              type='text'
-              name='location'
-              className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
-              required
-              value={location}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Date Posted */}
-          <div>
-            <label className='block text-gray-700 text-xs font-medium'>Date Posted:</label>
-            <input
-              type='date'
-              name='dateposted'
-              className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
-              required
-              value={datePosted}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className='block text-gray-700 text-xs font-medium'>Status:</label>
-            <select
-              name='status'
-              className='w-full mt-1 p-1 border border-gray-300 rounded text-xs'
-              required
-              value={status}
-              onChange={handleChange}
-            >
-              <option value='Open'>Open</option>
-              <option value='Closed'>Closed</option>
-            </select>
-          </div>
-
-          {/* Submit Button */}
           <button
-            type='submit'
-            className='w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-xs'
+            type="submit"
+            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-xs"
           >
-            Post Job
+            Upload PDF
           </button>
         </form>
+
+        {predictions.length > 0 && (
+  <div className="mt-4">
+    <h2 className="font-semibold text-sm">Predicted Professions:</h2>
+    <ul className="list-disc ml-4 text-sm">
+      {predictions.map((profession, index) => (
+        <li key={index}>{profession}</li>
+      ))}
+    </ul>
+  </div>
+)}
+
       </div>
     </div>
   );
