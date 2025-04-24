@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GlobalWorkerOptions } from 'pdfjs-dist';
 import axios from 'axios';
-import { X } from 'lucide-react';
+import { X, UploadCloud } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 
 const cleanResume = (txt) => {
@@ -17,9 +18,9 @@ const cleanResume = (txt) => {
 
 const JobPostingForm = ({ onClose }) => {
   const [pdfFile, setPdfFile] = useState(null);
-  const [predictions, setPredictions] = useState([]);
-  const [recommendedJobs, setRecommendedJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -28,6 +29,26 @@ const JobPostingForm = ({ onClose }) => {
 
   const handleChange = (e) => {
     const file = e.target.files[0];
+    validateAndSetFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    validateAndSetFile(file);
+  };
+
+  const validateAndSetFile = (file) => {
     if (file && file.type === 'application/pdf') {
       setPdfFile(file);
     } else {
@@ -36,76 +57,47 @@ const JobPostingForm = ({ onClose }) => {
     }
   };
 
-  const recommendJobs = async (predictedProfession, location = 'us') => {
-    const APP_ID = 'a3518aee';
-    const APP_KEY = '6391052c1e6589932333925ccc12fa13';
-    const country = location.toLowerCase();
-    
-    try {
-      const response = await fetch(
-        `https://api.adzuna.com/v1/api/jobs/${country}/search/1?app_id=${APP_ID}&app_key=${APP_KEY}&what=${encodeURIComponent(predictedProfession)}&results_per_page=10`
-      );
-      
-      const data = await response.json();
-      
-      if (data.results && data.results.length > 0) {
-        return data.results.map(job => ({
-          title: job.title,
-          company: job.company.display_name,
-          location: job.location.display_name,
-          description: job.description,
-          url: job.redirect_url,
-          posted: job.created
-        }));
-      } else {
-        return []; // No jobs found
-      }
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-      return []; // Return empty array on error
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
     if (!pdfFile) {
       alert('Please select a PDF file before submitting.');
-      setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
     const formData = new FormData();
     formData.append('pdfFile', pdfFile);
 
     try {
       const token = localStorage.getItem('token');
-      if(!token){
+      if (!token) {
         console.log("no token found");
       }
 
-      // Upload PDF and get prediction
       const response = await axios.post('http://localhost:5000/api/jobpostings/upload', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-    
-      console.log('Response from upload:', response.data);
-      const result = response.data.result;
       
-      if (result) {
-        const prediction = result.replace('Prediction: ', '').trim();
-        setPredictions([prediction]);
-        
-        // Get job recommendations based on prediction
-        const jobs = await recommendJobs(prediction);
-        setRecommendedJobs(jobs);
-      } else {
-        alert('No prediction found in the response.');
-      }
+      console.log('Response from upload:', response.data);
+      const { prediction, skills, match_percent, missing_skills, skill_info } = response.data;
+
+if (prediction && skills) {
+  console.log(skills);
+  
+  navigate('/prediction-result', { state: {
+    prediction,
+    skills,
+    match_percent,
+    missing_skills,
+    skill_info
+  } });
+} else {
+  alert('Prediction or skills data missing from response.');
+}
 
     } catch (error) {
       console.error('Error:', error.message);
@@ -116,75 +108,75 @@ const JobPostingForm = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-md">
-        <div className="flex justify-between items-center mb-2">
-          <h1 className="text-lg font-semibold">UPLOAD PDF</h1>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
-            <X />
-          </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Upload Your Resume</h1>
+            <button 
+              onClick={onClose} 
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div 
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+                isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <UploadCloud size={48} className="text-blue-500" />
+                <p className="text-gray-600">
+                  {pdfFile 
+                    ? pdfFile.name 
+                    : 'Drag & drop your PDF here or click to browse'}
+                </p>
+                <p className="text-sm text-gray-500">Only PDF files are accepted</p>
+                <label className="cursor-pointer mt-4">
+                  <span className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium">
+                    Select File
+                  </span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleChange}
+                    className="hidden"
+                    required
+                  />
+                </label>
+              </div>
+            </div>
+            
+            <button
+              type="submit"
+              disabled={!pdfFile || isLoading}
+              className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors flex items-center justify-center ${
+                pdfFile && !isLoading
+                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  : 'bg-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : 'Analyze Resume'}
+            </button>
+          </form>
         </div>
-        <form className="space-y-2" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-gray-700 text-xs font-medium">Upload PDF:</label>
-            <input
-              type="file"
-              accept="application/pdf"
-              className="w-full mt-1 p-1 border border-gray-300 rounded text-xs"
-              required
-              onChange={handleChange}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 text-xs"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Processing...' : 'Upload PDF'}
-          </button>
-        </form>
-
-        {predictions.length > 0 && (
-          <div className="mt-4">
-            <h2 className="font-semibold text-sm">Predicted Profession:</h2>
-            <ul className="list-disc ml-4 text-sm">
-              {predictions.map((profession, index) => (
-                <li key={index}>{profession}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-{recommendedJobs.length > 0 && (
-  <div className="mt-4">
-    <h2 className="font-semibold text-sm">Recommended Jobs:</h2>
-    <div className="overflow-y-auto max-h-60 space-y-3 mt-2 p-2 border rounded-lg">
-      {recommendedJobs.map((job, index) => (
-        <div key={index} className="border p-3 rounded-lg bg-gray-50">
-          <h3 className="font-medium">
-            <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-              {job.title}
-            </a>
-          </h3>
-          <p className="text-gray-600 text-xs">{job.company} • {job.location}</p>
-          <p className="text-gray-700 text-sm mt-1">{job.description.substring(0, 150)}...</p>
-          <p className="text-gray-500 text-xs mt-1">Posted: {new Date(job.posted).toLocaleDateString()}</p>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
-
-        {recommendedJobs.length === 0 && predictions.length > 0 && (
-          <div className="mt-4 text-sm text-gray-500">
-            No job recommendations found for this profession.
-          </div>
-        )}
       </div>
     </div>
   );
 };
 
-export default JobPostingForm;
+export default JobPostingForm;

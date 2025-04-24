@@ -11,6 +11,7 @@ const { PythonShell } = require('python-shell');
 const path = require('path');
 const pythonScriptPath = './ml/predict.py';
 const { exec } = require('child_process');
+const router = express.Router();
 
 
 
@@ -155,7 +156,7 @@ app.use('/api/jobpostings', authenticateToken);
 
 // Job-posting route for uploading PDF
 // Job-posting route for uploading PDF
-app.post('/api/jobpostings/upload', upload.single('pdfFile'), async (req, res) => {
+app.use('/api/jobpostings/upload', upload.single('pdfFile'), async (req, res) => {
     const userId = req.user.id;
 
     if (!req.file) {
@@ -166,6 +167,7 @@ app.post('/api/jobpostings/upload', upload.single('pdfFile'), async (req, res) =
         console.log('User ID:', userId);
         console.log('File path:', path.resolve(req.file.path));
 
+        // Save job posting
         const job = new JobPosting({
             title: req.file.originalname,
             userId,
@@ -173,62 +175,45 @@ app.post('/api/jobpostings/upload', upload.single('pdfFile'), async (req, res) =
         });
 
         const result = await job.save();
-
         console.log('Job posting created:', result);
 
-        // res.status(201).json({
-        //     jobPosting: result
-        // });
+        // Run Python script
+        const pythonScriptPath = path.resolve(__dirname, './ml/predict.py'); // Adjust if needed
+        const filePath = path.resolve(req.file.path);
 
-        // Run Python script to get prediction
-        // PythonShell.run(pythonScriptPath, {
-        //     args: [path.resolve(req.file.path)],
-        //     pythonOptions: ['-u'],
-        // }, (err, predictionResults) => {
-        //     console.log("Python script executed");
-
-        //     if (err) {
-        //         console.error('Error executing Python script:', err);
-        //         return res.status(500).json({ message: 'Error processing resume with ML' });
-        //     }
-        //     if (!predictionResults) {
-        //         console.log('No output from Python script');
-        //         return res.status(500).json({ message: 'No prediction received from Python script' });
-        //     }
-
-        //     console.log('Prediction results:', predictionResults);
-
-        //     if (!predictionResults || predictionResults.length === 0) {
-        //         console.log('No output from Python script');
-        //         return res.status(500).json({ message: 'No prediction received from Python script' });
-        //     }
-
-        //     const predictedCategory = predictionResults[0] ? predictionResults[0] : 'No prediction';
-        //     console.log('Predicted category:', predictedCategory);
-
-        //     res.status(201).json({
-        //         jobPosting: result,
-        //         prediction: predictedCategory
-        //     });
-        // });
-
-        const pythonScriptPath = path.resolve(__dirname, './ml/predict.py');
-        const filePath = path.resolve(req.file.path);  // Ensure this is absolute path
-
-        // Wrap the file path in quotes to handle spaces correctly
         const command = `python "${pythonScriptPath}" "${filePath}"`;
-    
+
         exec(command, (err, stdout, stderr) => {
             if (err) {
                 console.error(`exec error: ${err}`);
                 return res.status(500).json({ message: 'Error executing Python script' });
             }
-            // if (stderr) {
-            //     console.error(`stderr: ${stderr}`);
-            //     return res.status(500).json({ message: 'Python script error' });
-            // }
+
             console.log(`stdout: ${stdout}`);
-            res.status(200).json({ message: 'Python script executed successfully', result: stdout });
+
+            try {
+                const trimmedOutput = stdout.trim();  // Trim the output to remove unwanted whitespace
+                const resultData = JSON.parse(trimmedOutput);  // Parse the JSON output
+            
+                // Optional check for correct output format
+                if (
+                    !resultData.prediction ||
+                    !Array.isArray(resultData.skills) ||
+                    typeof resultData.match_percent !== 'number' ||
+                    !Array.isArray(resultData.missing_skills) ||
+                    typeof resultData.skill_info !== 'object'
+                ) {
+                    return res.status(500).json({ message: 'Unexpected output format from Python script' });
+                }
+            
+                // Return the parsed data in your response
+                res.status(200).json(resultData);
+            } catch (error) {
+                console.error("Error parsing Python output:", error);
+                res.status(500).json({ message: 'Error parsing Python script output' });
+            }
+            
+            
         });
 
     } catch (error) {
@@ -289,6 +274,7 @@ app.post('/api/jobpostings/predict', async (req, res) => {
     });
 });
 
+module.exports = router;
 
 // Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
