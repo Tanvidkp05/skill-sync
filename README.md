@@ -63,7 +63,7 @@ SkillSync is an intelligent resume analysis platform that uses NLP and AI to:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/skillsync.git
+   git clone https://github.com/Tanvidkp05/skill-sync
    cd skillsync
 2. Install dependencies
    ```bash
